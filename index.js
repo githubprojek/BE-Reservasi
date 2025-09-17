@@ -38,7 +38,12 @@ app.use("/fasilitas", fasilitasRoutes);
 
 startAutoCheckout();
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  connectDb();
+app.get("/", (req, res) => {
+  res.send("API Online 🚀");
+});
+
+connectDb().then(() => {
+  app.listen(PORT, () => {
+    console.log("✅ Backend running on port:", PORT);
+  });
 });
