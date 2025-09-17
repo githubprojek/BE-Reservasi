@@ -17,9 +17,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174", "https://admin-reservasi.vercel.app"];
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "https://admin-reservasi.vercel.app"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
