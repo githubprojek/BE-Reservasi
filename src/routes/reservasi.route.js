@@ -29,7 +29,6 @@ router.delete("/deleteReservasi/:reservasiId", protectRoute, deleteReservasi);
 router.post("/manualCheckout/:reservasiId", protectRoute, manualCheckout);
 router.post("/checkin/:reservasiId", protectRoute, checkInReservasi);
 router.post("/checkout/:reservasiId", protectRoute, checkOutReservasi);
-
 router.get("/getCheckout", protectRoute, getHistoryReservasi);
 
 //Payment midtrans

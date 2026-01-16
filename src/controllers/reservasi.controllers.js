@@ -8,64 +8,44 @@ import HistoryReservasi from "../models/history.reservasi.models.js";
 export const bayarDenganCoreAPI = async (req, res) => {
   try {
     const { reservasiId } = req.params;
-    const { paymentMethod } = req.body; // ✅ Ambil dari frontend
+    const { paymentMethod } = req.body;
 
     const reservasi = await Reservasi.findById(reservasiId);
     if (!reservasi) {
       return res.status(404).json({ message: "Reservasi tidak ditemukan" });
     }
 
-    // ✅ Validasi metode
-    const allowedMethods = ["bni", "bri", "qris"];
-    if (!allowedMethods.includes(paymentMethod)) {
-      return res.status(400).json({ message: "Metode pembayaran tidak didukung" });
+    const supportedBanks = ["bca", "bri"];
+    if (!supportedBanks.includes(paymentMethod)) {
+      return res.status(400).json({
+        message: "Metode pembayaran tidak didukung",
+        received: paymentMethod,
+      });
     }
 
-    // ✅ Simpan metode pembayaran ke database
     reservasi.paymentMethod = paymentMethod;
 
-    // ✅ Payload dasar
     const chargePayload = {
-      // payment_type: paymentMethod,
+      payment_type: "bank_transfer",
       transaction_details: {
         order_id: `RSV-${reservasi._id}`,
-        gross_amount: reservasi.totalPrice,
+        gross_amount: Number(reservasi.totalPrice),
       },
       customer_details: {
         first_name: reservasi.guestName,
         email: reservasi.guestEmail,
         phone: reservasi.guestPhone,
       },
+      bank_transfer: {
+        bank: paymentMethod,
+      },
     };
 
-    // ✅ Tambahan payload berdasarkan tipe pembayaran
-    switch (paymentMethod) {
-      case "qris":
-        chargePayload.payment_type = "qris";
-        chargePayload.qris = {};
-        break;
-      case "bni":
-        chargePayload.payment_type = "bank_transfer";
-        chargePayload.bank_transfer = {
-          bank: "bni",
-        };
-        break;
-      case "bri":
-        chargePayload.payment_type = "bank_transfer";
-        chargePayload.bank_transfer = {
-          bank: "bri",
-        };
-        break;
-    }
-
-    // ✅ Lakukan charge
     const chargeRes = await coreApi.charge(chargePayload);
 
-    // ✅ Simpan status awal
     reservasi.paymentStatus = "pending";
     await reservasi.save();
 
-    // ✅ Kirim respons
     res.status(200).json({
       message: "Transaksi berhasil dibuat",
       reservasiId: reservasi._id,
@@ -73,10 +53,10 @@ export const bayarDenganCoreAPI = async (req, res) => {
       data: chargeRes,
     });
   } catch (err) {
-    console.error("Midtrans Error:", err);
+    console.error("Midtrans Error:", err?.ApiResponse || err);
     res.status(500).json({
       message: "Gagal membuat transaksi Core API",
-      error: err.message,
+      error: err?.ApiResponse || err.message,
     });
   }
 };
@@ -228,7 +208,7 @@ export const createReservasi = async (req, res) => {
       keterangan,
       statusReservasi: "pending",
       paymentStatus: "pending",
-      paymentMethod: paymentMethod || "qris",
+      paymentMethod: paymentMethod || "bca",
     });
 
     const savedReservasi = await newReservasi.save();

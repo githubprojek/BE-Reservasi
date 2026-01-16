@@ -52,8 +52,8 @@ const reservasiSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["bni", "bri", "qris"],
-      default: "qris",
+      enum: ["bca", "bri"],
+      default: "bca",
     },
     paymentStatus: {
       type: String,

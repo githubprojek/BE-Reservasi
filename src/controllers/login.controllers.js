@@ -99,7 +99,6 @@ export const getLogin = async (req, res) => {
   }
 };
 
-// ✅ UPDATE STAFF
 export const updateStaff = async (req, res) => {
   try {
     const staffId = req.params.id;
@@ -129,7 +128,6 @@ export const updateStaff = async (req, res) => {
   }
 };
 
-// ✅ DELETE STAFF
 export const deleteStaff = async (req, res) => {
   try {
     const staffId = req.params.staffId;

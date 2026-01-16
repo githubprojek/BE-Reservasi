@@ -66,7 +66,7 @@ export const getRoom = async (req, res) => {
       rooms.map(async (room) => {
         const bookedCount = await Reservasi.countDocuments({
           room: room._id,
-          checkOut: { $gte: new Date() }, // hanya hitung yang belum checkout
+          checkOut: { $gte: new Date() }, 
         });
 
         const availableRoom = room.jumlah_room - bookedCount;
