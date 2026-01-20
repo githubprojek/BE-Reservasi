@@ -1,6 +1,6 @@
 import Login from "../models/login.models.js";
 import bcrypt from "bcryptjs";
-import { generateToken } from "../lib/utils.js";
+import { generateToken } from "../lib/auth-token.js";
 import dotenv from "dotenv";
 
 dotenv.config();

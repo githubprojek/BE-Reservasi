@@ -22,16 +22,19 @@ Server backend untuk aplikasi sistem manajemen reservasi hotel yang komprehensif
 ## 🎯 Fitur Utama
 
 ### 1. **Manajemen Hotel**
+
 - CRUD (Create, Read, Update, Delete) hotel
 - Upload gambar hotel ke Cloudinary
 - Daftar hotel dengan informasi lengkap
 
 ### 2. **Manajemen Kamar**
+
 - CRUD kamar hotel
 - Kategori dan tipe kamar yang berbeda
 - Informasi kapasitas dan fasilitas kamar
 
 ### 3. **Sistem Reservasi**
+
 - Membuat reservasi baru
 - Update data reservasi
 - Menghapus reservasi
@@ -39,6 +42,7 @@ Server backend untuk aplikasi sistem manajemen reservasi hotel yang komprehensif
 - Check-in dan check-out otomatis/manual
 
 ### 4. **Sistem Pembayaran**
+
 - Integrasi Midtrans untuk pembayaran
 - Payment Gateway API
 - QR Code dan Core API payment method
@@ -46,16 +50,19 @@ Server backend untuk aplikasi sistem manajemen reservasi hotel yang komprehensif
 - Pembayaran otomatis untuk reservasi expired
 
 ### 5. **Manajemen Fasilitas**
+
 - CRUD fasilitas hotel
 - Asosiasi fasilitas dengan kamar
 
 ### 6. **Sistem Autentikasi & Autorisasi**
+
 - Login dengan JWT token
 - Role-based access control (Admin, Super Admin)
 - Password encryption dengan bcrypt
 - Proteksi endpoint berdasarkan role
 
 ### 7. **Fitur Otomatis**
+
 - Auto checkout untuk reservasi yang expired
 - Scheduled tasks menggunakan node-cron
 - Sanitasi data MongoDB untuk security
@@ -65,14 +72,17 @@ Server backend untuk aplikasi sistem manajemen reservasi hotel yang komprehensif
 ## 🛠️ Teknologi yang Digunakan
 
 ### Core Framework
+
 - **Express.js** (v4.21.2) - Web framework untuk Node.js
 - **Node.js** - Runtime environment
 
 ### Database
+
 - **MongoDB** - Database NoSQL
 - **Mongoose** (v8.10.0) - ODM untuk MongoDB
 
 ### Autentikasi & Keamanan
+
 - **JWT (jsonwebtoken)** (v9.0.2) - Token-based authentication
 - **bcrypt** (v5.1.1) & **bcryptjs** (v3.0.0) - Password hashing
 - **Helmet.js** (v8.1.0) - HTTP header security
@@ -80,20 +90,24 @@ Server backend untuk aplikasi sistem manajemen reservasi hotel yang komprehensif
 - **cookie-parser** (v1.4.7) - Cookie parsing
 
 ### Media Upload
+
 - **Cloudinary** (v2.5.1) - Cloud storage untuk gambar
 - **Multer** (v2.0.1) - File upload middleware
 
 ### Payment Gateway
+
 - **Midtrans-client** (v1.4.3) - Payment gateway integration
 - **QR Code Proxy** - QRIS payment method
 
 ### Utility
+
 - **dotenv** (v16.4.7) - Environment variable management
 - **CORS** (v2.8.5) - Cross-Origin Resource Sharing
 - **node-cron** (v4.2.0) - Scheduled tasks
 - **ngrok** (v5.0.0-beta.2) - Webhook tunneling
 
 ### Development
+
 - **Nodemon** (v3.1.9) - Auto-reload development server
 
 ---
@@ -130,12 +144,14 @@ Sebelum menginstall, pastikan Anda sudah memiliki:
 ## 🚀 Cara Installasi
 
 ### Step 1: Clone Repository
+
 ```bash
 git clone <repository-url>
 cd "Booking App/server"
 ```
 
 ### Step 2: Install Dependencies
+
 ```bash
 npm install
 ```
@@ -143,6 +159,7 @@ npm install
 Perintah ini akan menginstall semua package yang diperlukan berdasarkan file `package.json`.
 
 ### Step 3: Setup Environment Variables
+
 Buat file `.env` di root folder server dan tambahkan konfigurasi:
 
 ```env
@@ -167,6 +184,7 @@ MIDTRANS_SERVER_KEY=your_server_key
 ```
 
 ### Step 4: Jalankan Server
+
 ```bash
 npm start
 ```
@@ -174,6 +192,7 @@ npm start
 Server akan berjalan di `http://localhost:5000`
 
 Anda akan melihat output:
+
 ```
 Server running on port 5000
 Connected to MongoDB
@@ -185,26 +204,32 @@ Auto checkout started
 ## ⚙️ Konfigurasi Environment
 
 ### MONGODB_URI
+
 - Koneksi string ke MongoDB Atlas
 - Format: `mongodb+srv://username:password@cluster.region.mongodb.net/database`
 - Dapatkan dari MongoDB Atlas dashboard
 
 ### JWT_SECRET
+
 - Secret key untuk signing JWT tokens
 - Gunakan string yang random dan panjang
 - Contoh: `your_random_secret_key_12345`
 
 ### CLOUDINARY
+
 - **CLOUDINARY_CLOUD_NAME**: Nama cloud Anda di Cloudinary
 - **CLOUDINARY_API_KEY**: API key dari Cloudinary
 - **CLOUDINARY_API_SECRET**: API secret dari Cloudinary
 
 ### MIDTRANS
+
 - **MIDTRANS_CLIENT_KEY**: Client key dari Midtrans (public)
 - **MIDTRANS_SERVER_KEY**: Server key dari Midtrans (private)
 
 ### CORS Configuration
+
 Endpoints yang diizinkan dalam `index.js`:
+
 - `http://localhost:5173` (Vite dev server client)
 - `http://localhost:5174` (Vite dev server admin)
 - `https://admin-reservasi.vercel.app` (Production admin)
@@ -264,74 +289,74 @@ server/
 
 ### 🔐 Authentication Routes (`/auth`)
 
-| Method | Endpoint | Deskripsi | Protected | Role |
-|--------|----------|-----------|-----------|------|
-| POST | `/auth/register` | Register staff/admin baru | ✗ | - |
-| POST | `/auth/login` | Login user | ✗ | - |
-| POST | `/auth/logout` | Logout user | ✓ | - |
-| GET | `/auth/profile` | Get profile user | ✓ | - |
-| PUT | `/auth/updateProfile` | Update profile user | ✓ | - |
-| GET | `/auth/getStaff` | Dapatkan list staff | ✓ | Super Admin |
-| DELETE | `/auth/deleteStaff/:id` | Hapus staff | ✓ | Super Admin |
+| Method | Endpoint                | Deskripsi                 | Protected | Role        |
+| ------ | ----------------------- | ------------------------- | --------- | ----------- |
+| POST   | `/auth/register`        | Register staff/admin baru | ✗         | -           |
+| POST   | `/auth/login`           | Login user                | ✗         | -           |
+| POST   | `/auth/logout`          | Logout user               | ✓         | -           |
+| GET    | `/auth/profile`         | Get profile user          | ✓         | -           |
+| PUT    | `/auth/updateProfile`   | Update profile user       | ✓         | -           |
+| GET    | `/auth/getStaff`        | Dapatkan list staff       | ✓         | Super Admin |
+| DELETE | `/auth/deleteStaff/:id` | Hapus staff               | ✓         | Super Admin |
 
 ### 🏨 Hotel Routes (`/hotel`)
 
-| Method | Endpoint | Deskripsi | Protected | Role |
-|--------|----------|-----------|-----------|------|
-| POST | `/hotel/createHotel` | Buat hotel baru | ✓ | Super Admin |
-| GET | `/hotel/getHotel` | Dapatkan list hotel | ✗ | - |
-| GET | `/hotel/getHotelById/:hotelId` | Dapatkan detail hotel | ✓ | - |
-| PUT | `/hotel/updateHotel/:hotelId` | Update hotel | ✓ | Super Admin |
-| DELETE | `/hotel/deleteHotel/:hotelId` | Hapus hotel | ✓ | Super Admin |
+| Method | Endpoint                       | Deskripsi             | Protected | Role        |
+| ------ | ------------------------------ | --------------------- | --------- | ----------- |
+| POST   | `/hotel/createHotel`           | Buat hotel baru       | ✓         | Super Admin |
+| GET    | `/hotel/getHotel`              | Dapatkan list hotel   | ✗         | -           |
+| GET    | `/hotel/getHotelById/:hotelId` | Dapatkan detail hotel | ✓         | -           |
+| PUT    | `/hotel/updateHotel/:hotelId`  | Update hotel          | ✓         | Super Admin |
+| DELETE | `/hotel/deleteHotel/:hotelId`  | Hapus hotel           | ✓         | Super Admin |
 
 ### 🛏️ Room Routes (`/room`)
 
-| Method | Endpoint | Deskripsi | Protected | Role |
-|--------|----------|-----------|-----------|------|
-| POST | `/room/createRoom` | Buat kamar baru | ✓ | Super Admin |
-| GET | `/room/getRoom` | Dapatkan list kamar | ✗ | - |
-| GET | `/room/getRoomById/:roomId` | Dapatkan detail kamar | ✓ | - |
-| PUT | `/room/updateRoom/:roomId` | Update kamar | ✓ | Super Admin |
-| DELETE | `/room/deleteRoom/:roomId` | Hapus kamar | ✓ | Super Admin |
+| Method | Endpoint                    | Deskripsi             | Protected | Role        |
+| ------ | --------------------------- | --------------------- | --------- | ----------- |
+| POST   | `/room/createRoom`          | Buat kamar baru       | ✓         | Super Admin |
+| GET    | `/room/getRoom`             | Dapatkan list kamar   | ✗         | -           |
+| GET    | `/room/getRoomById/:roomId` | Dapatkan detail kamar | ✓         | -           |
+| PUT    | `/room/updateRoom/:roomId`  | Update kamar          | ✓         | Super Admin |
+| DELETE | `/room/deleteRoom/:roomId`  | Hapus kamar           | ✓         | Super Admin |
 
 ### 📅 Reservasi Routes (`/reservasi`)
 
-| Method | Endpoint | Deskripsi | Protected | Role |
-|--------|----------|-----------|-----------|------|
-| POST | `/reservasi/createReservasi` | Buat reservasi baru | ✗ | - |
-| GET | `/reservasi/getReservasi` | Dapatkan list reservasi | ✓ | Admin |
-| GET | `/reservasi/getReservasiById/:reservasiId` | Dapatkan detail reservasi | ✓ | Admin |
-| PUT | `/reservasi/updateReservasi/:reservasiId` | Update reservasi | ✓ | Admin |
-| DELETE | `/reservasi/deleteReservasi/:reservasiId` | Hapus reservasi | ✓ | Admin |
-| POST | `/reservasi/checkin/:reservasiId` | Check-in manual | ✓ | Admin |
-| POST | `/reservasi/checkout/:reservasiId` | Check-out manual | ✓ | Admin |
-| POST | `/reservasi/manualCheckout/:reservasiId` | Manual checkout tertentu | ✓ | Admin |
-| GET | `/reservasi/getCheckout` | Riwayat checkout/history | ✓ | Admin |
+| Method | Endpoint                                   | Deskripsi                 | Protected | Role  |
+| ------ | ------------------------------------------ | ------------------------- | --------- | ----- |
+| POST   | `/reservasi/createReservasi`               | Buat reservasi baru       | ✗         | -     |
+| GET    | `/reservasi/getReservasi`                  | Dapatkan list reservasi   | ✓         | Admin |
+| GET    | `/reservasi/getReservasiById/:reservasiId` | Dapatkan detail reservasi | ✓         | Admin |
+| PUT    | `/reservasi/updateReservasi/:reservasiId`  | Update reservasi          | ✓         | Admin |
+| DELETE | `/reservasi/deleteReservasi/:reservasiId`  | Hapus reservasi           | ✓         | Admin |
+| POST   | `/reservasi/checkin/:reservasiId`          | Check-in manual           | ✓         | Admin |
+| POST   | `/reservasi/checkout/:reservasiId`         | Check-out manual          | ✓         | Admin |
+| POST   | `/reservasi/manualCheckout/:reservasiId`   | Manual checkout tertentu  | ✓         | Admin |
+| GET    | `/reservasi/getCheckout`                   | Riwayat checkout/history  | ✓         | Admin |
 
 ### 💳 Payment Routes (`/reservasi`)
 
-| Method | Endpoint | Deskripsi | Protected |
-|--------|----------|-----------|-----------|
-| POST | `/reservasi/createMidtransTransaction/:reservasiId` | Buat transaksi Midtrans | ✗ |
-| POST | `/reservasi/core-payment/:reservasiId` | Pembayaran Core API | ✗ |
-| GET | `/reservasi/cek-status-pembayaran/:reservasiId` | Cek status pembayaran | ✗ |
-| POST | `/reservasi/cancelled/:reservasiId` | Cancel reservasi | ✗ |
+| Method | Endpoint                                            | Deskripsi               | Protected |
+| ------ | --------------------------------------------------- | ----------------------- | --------- |
+| POST   | `/reservasi/createMidtransTransaction/:reservasiId` | Buat transaksi Midtrans | ✗         |
+| POST   | `/reservasi/core-payment/:reservasiId`              | Pembayaran Core API     | ✗         |
+| GET    | `/reservasi/cek-status-pembayaran/:reservasiId`     | Cek status pembayaran   | ✗         |
+| POST   | `/reservasi/cancelled/:reservasiId`                 | Cancel reservasi        | ✗         |
 
 ### 🏢 Fasilitas Routes (`/fasilitas`)
 
-| Method | Endpoint | Deskripsi | Protected | Role |
-|--------|----------|-----------|-----------|------|
-| POST | `/fasilitas/createFasilitas` | Buat fasilitas baru | ✓ | Super Admin |
-| GET | `/fasilitas/getFasilitas` | Dapatkan list fasilitas | ✗ | - |
-| GET | `/fasilitas/getFasilitasById/:fasilitasId` | Dapatkan detail fasilitas | ✓ | - |
-| PUT | `/fasilitas/updateFasilitas/:fasilitasId` | Update fasilitas | ✓ | Super Admin |
-| DELETE | `/fasilitas/deleteFasilitas/:fasilitasId` | Hapus fasilitas | ✓ | Super Admin |
+| Method | Endpoint                                   | Deskripsi                 | Protected | Role        |
+| ------ | ------------------------------------------ | ------------------------- | --------- | ----------- |
+| POST   | `/fasilitas/createFasilitas`               | Buat fasilitas baru       | ✓         | Super Admin |
+| GET    | `/fasilitas/getFasilitas`                  | Dapatkan list fasilitas   | ✗         | -           |
+| GET    | `/fasilitas/getFasilitasById/:fasilitasId` | Dapatkan detail fasilitas | ✓         | -           |
+| PUT    | `/fasilitas/updateFasilitas/:fasilitasId`  | Update fasilitas          | ✓         | Super Admin |
+| DELETE | `/fasilitas/deleteFasilitas/:fasilitasId`  | Hapus fasilitas           | ✓         | Super Admin |
 
 ### 🔌 Proxy Routes (`/proxy`)
 
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| POST | `/proxy/qris` | QRIS payment proxy |
+| Method | Endpoint      | Deskripsi          |
+| ------ | ------------- | ------------------ |
+| POST   | `/proxy/qris` | QRIS payment proxy |
 
 ---
 
@@ -340,6 +365,7 @@ server/
 ### 1. Register Pengguna Baru
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/auth/register \
   -H "Content-Type: application/json" \
@@ -353,6 +379,7 @@ curl -X POST http://localhost:5000/auth/register \
 ```
 
 **Response (Success - 201):**
+
 ```json
 {
   "message": "Register berhasil",
@@ -370,6 +397,7 @@ curl -X POST http://localhost:5000/auth/register \
 ### 2. Login
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/auth/login \
   -H "Content-Type: application/json" \
@@ -380,6 +408,7 @@ curl -X POST http://localhost:5000/auth/login \
 ```
 
 **Response (Success - 200):**
+
 ```json
 {
   "message": "Login successful",
@@ -397,6 +426,7 @@ Cookie dengan JWT token akan di-set secara otomatis.
 ### 3. Membuat Hotel Baru
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/hotel/createHotel \
   -H "Content-Type: application/json" \
@@ -408,6 +438,7 @@ curl -X POST http://localhost:5000/hotel/createHotel \
 ```
 
 **Response (Success - 201):**
+
 ```json
 {
   "message": "Hotel created successfully",
@@ -416,9 +447,7 @@ curl -X POST http://localhost:5000/hotel/createHotel \
     "namaHotel": "Hotel Premium",
     "lokasi": "Jakarta",
     "deskripsi": "Hotel bintang lima",
-    "imageHotel": [
-      "https://res.cloudinary.com/.../image.jpg"
-    ],
+    "imageHotel": ["https://res.cloudinary.com/.../image.jpg"],
     "createdAt": "2024-01-17T10:35:00Z"
   }
 }
@@ -427,6 +456,7 @@ curl -X POST http://localhost:5000/hotel/createHotel \
 ### 4. Membuat Kamar Baru
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/room/createRoom \
   -H "Content-Type: application/json" \
@@ -442,6 +472,7 @@ curl -X POST http://localhost:5000/room/createRoom \
 ```
 
 **Response (Success - 201):**
+
 ```json
 {
   "message": "Room created successfully",
@@ -461,6 +492,7 @@ curl -X POST http://localhost:5000/room/createRoom \
 ### 5. Membuat Reservasi
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/reservasi/createReservasi \
   -H "Content-Type: application/json" \
@@ -479,6 +511,11 @@ curl -X POST http://localhost:5000/reservasi/createReservasi \
 ```
 
 **Response (Success - 201):**
+<<<<<<< HEAD
+=======
+
+> > > > > > > 4dcb76f (trying clean struktur in facility but dont work yet on other feature)
+
 ```json
 {
   "message": "Reservasi created successfully",
@@ -503,6 +540,7 @@ curl -X POST http://localhost:5000/reservasi/createReservasi \
 ### 6. Membuat Transaksi Pembayaran dengan Midtrans
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/reservasi/createMidtransTransaction/60d5ec49c1234567890pqr \
   -H "Content-Type: application/json" \
@@ -510,6 +548,7 @@ curl -X POST http://localhost:5000/reservasi/createMidtransTransaction/60d5ec49c
 ```
 
 **Response (Success - 200):**
+
 ```json
 {
   "message": "Transaksi Midtrans berhasil dibuat",
@@ -524,12 +563,14 @@ curl -X POST http://localhost:5000/reservasi/createMidtransTransaction/60d5ec49c
 ### 7. Cek Status Pembayaran
 
 **Request:**
+
 ```bash
 curl -X GET "http://localhost:5000/reservasi/cek-status-pembayaran/60d5ec49c1234567890pqr" \
   -H "Content-Type: application/json"
 ```
 
 **Response (Success - 200):**
+
 ```json
 {
   "message": "Status pembayaran berhasil diambil",
@@ -542,6 +583,7 @@ curl -X GET "http://localhost:5000/reservasi/cek-status-pembayaran/60d5ec49c1234
 ### 8. Check-in Reservasi
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/reservasi/checkin/60d5ec49c1234567890pqr \
   -H "Content-Type: application/json" \
@@ -552,6 +594,7 @@ curl -X POST http://localhost:5000/reservasi/checkin/60d5ec49c1234567890pqr \
 ```
 
 **Response (Success - 200):**
+
 ```json
 {
   "message": "Check-in berhasil",
@@ -567,6 +610,7 @@ curl -X POST http://localhost:5000/reservasi/checkin/60d5ec49c1234567890pqr \
 ### 9. Check-out Reservasi
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:5000/reservasi/checkout/60d5ec49c1234567890pqr \
   -H "Content-Type: application/json" \
@@ -577,6 +621,7 @@ curl -X POST http://localhost:5000/reservasi/checkout/60d5ec49c1234567890pqr \
 ```
 
 **Response (Success - 200):**
+
 ```json
 {
   "message": "Check-out berhasil",
@@ -592,12 +637,14 @@ curl -X POST http://localhost:5000/reservasi/checkout/60d5ec49c1234567890pqr \
 ### 10. Mendapatkan List Kamar
 
 **Request:**
+
 ```bash
 curl -X GET http://localhost:5000/room/getRoom \
   -H "Content-Type: application/json"
 ```
 
 **Response (Success - 200):**
+
 ```json
 {
   "message": "Rooms retrieved successfully",
@@ -628,36 +675,43 @@ curl -X GET http://localhost:5000/room/getRoom \
 ## 🌟 Fitur Khusus
 
 ### 1. Auto Checkout Scheduler
+
 - Sistem otomatis yang berjalan setiap hari untuk checkout reservasi yang sudah expired
 - Menggunakan `node-cron` untuk scheduling
 - File: [autoCheckout.js](src/lib/autoCheckout.js)
 
 ### 2. Payment Gateway Integration
+
 - Support untuk 3 metode pembayaran:
   - **Snap Payment**: Redirect ke halaman payment Midtrans
   - **Core API**: Payment dari server
   - **QRIS**: Pembayaran dengan QR Code
 
 ### 3. Image Upload ke Cloudinary
+
 - Upload gambar hotel dan kamar langsung ke cloud storage
 - Menggunakan Multer untuk handling file upload
 - File: [uploadImage.js](src/middleware/uploadImage.js)
 
 ### 4. JWT Token Authentication
+
 - Token dikirim dalam cookie untuk keamanan
 - Auto expire setelah periode tertentu
 - Refresh token mechanism
 
 ### 5. Role-Based Access Control
+
 - 2 role: Admin dan Super Admin
 - Endpoint tertentu hanya bisa diakses oleh role spesifik
 - Middleware: [auth.middleware.js](src/middleware/auth.middleware.js)
 
 ### 6. MongoDB Data Sanitization
+
 - Proteksi dari NoSQL injection
 - Menggunakan `express-mongo-sanitize`
 
 ### 7. Security Headers
+
 - Implementasi Helmet.js untuk HTTP security headers
 - Proteksi dari berbagai jenis attack
 
@@ -668,12 +722,14 @@ curl -X GET http://localhost:5000/room/getRoom \
 ### Best Practices yang Diterapkan
 
 1. **Password Hashing**
+
    ```javascript
    // Password di-hash menggunakan bcrypt sebelum disimpan
    const hashedPassword = await bcrypt.hash(password, 10);
    ```
 
 2. **JWT Authentication**
+
    ```javascript
    // Token diverifikasi di setiap protected endpoint
    const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -701,7 +757,7 @@ curl -X GET http://localhost:5000/room/getRoom \
    res.cookie("jwt", token, {
      httpOnly: true,
      secure: process.env.NODE_ENV === "production",
-     sameSite: "Strict"
+     sameSite: "Strict",
    });
    ```
 
@@ -720,37 +776,49 @@ curl -X GET http://localhost:5000/room/getRoom \
 ## 🐛 Troubleshooting
 
 ### Koneksi MongoDB Failed
+
 ```
 Error: MongoDB connection error
 ```
+
 **Solusi:**
+
 - Pastikan MONGODB_URI benar di `.env`
 - Cek IP whitelist di MongoDB Atlas
 - Pastikan internet connection stabil
 
 ### JWT Token Invalid
+
 ```
 Error: Unauthorized - Invalid token
 ```
+
 **Solusi:**
+
 - Pastikan JWT_SECRET sama di `.env`
 - Clear cookies dan login ulang
 - Cek token expiry time
 
 ### Cloudinary Upload Failed
+
 ```
 Error: Cloudinary upload failed
 ```
+
 **Solusi:**
+
 - Verifikasi credentials Cloudinary
 - Cek limit upload size (50MB di config)
 - Pastikan API key valid
 
 ### Port Already in Use
+
 ```
 Error: listen EADDRINUSE: address already in use :::5000
 ```
+
 **Solusi:**
+
 - Ubah PORT di `.env`
 - Kill process yang menggunakan port: `lsof -i :5000`
 
@@ -759,7 +827,5 @@ Error: listen EADDRINUSE: address already in use :::5000
 ## 📝 License
 
 ISC License
-
-
 
 **Last Updated:** January 17, 2024

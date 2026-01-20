@@ -1,4 +1,6 @@
 import Fasilitas from "../models/fasilitas.models.js";
+import FasilitasService from "../services/fasilitas.service.js";
+import { response_success, response_created, handleServiceErrorWithResponse } from "../utils/response.js";
 
 // CREATE fasilitas
 export const createFasilitas = async (req, res) => {
@@ -28,31 +30,21 @@ export const createFasilitas = async (req, res) => {
 
 // READ ALL fasilitas
 export const getFasilitas = async (req, res) => {
-  try {
-    const fasilitasList = await Fasilitas.find({});
-    res.status(200).json({ fasilitas: fasilitasList });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Something went wrong getFasilitas" });
+  const fasilitasServiceResponse = await FasilitasService.getAllService();
+  if (!fasilitasServiceResponse.status) {
+    return handleServiceErrorWithResponse(res, fasilitasServiceResponse);
   }
+  return response_success(res, { fasilitas: fasilitasServiceResponse.data });
 };
 
 // READ fasilitas by ID
 export const getFasilitasById = async (req, res) => {
   const { fasilitasId } = req.params;
-
-  try {
-    const fasilitas = await Fasilitas.findById(fasilitasId);
-
-    if (!fasilitas) {
-      return res.status(404).json({ message: "Fasilitas not found" });
-    }
-
-    res.status(200).json({ fasilitas });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Something went wrong getFasilitasById" });
+  const fasilitasServiceResponse = await FasilitasService.getFasilitasById(fasilitasId);
+  if (!fasilitasServiceResponse.status) {
+    return handleServiceErrorWithResponse(res, fasilitasServiceResponse);
   }
+  return response_success(res, { fasilitas: fasilitasServiceResponse.data });
 };
 
 // UPDATE fasilitas
