@@ -1,3 +1,5 @@
+// For standardized service responses in services
+
 export const INTERNAL_SERVER_ERROR_SERVICE_RESPONSE = {
   status: false,
   data: {},

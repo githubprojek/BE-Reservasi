@@ -1,4 +1,5 @@
 import { generateErrorStructure } from "../validation/helper.js";
+import { response_unprocessable_entity } from "../utils/response.js";
 
 export const validateFasilitasId = (req, res, next) => {
   const errors = [];
@@ -27,11 +28,7 @@ export const validateCreateFasilitas = (req, res, next) => {
   }
 
   if (errors.length > 0) {
-    return res.status(422).json({
-      content: null,
-      message: "Validation Error",
-      errors,
-    });
+    return response_unprocessable_entity(res, "Validation Error", errors);
   }
 
   next();
@@ -45,11 +42,7 @@ export const validateUpdateFasilitas = (req, res, next) => {
     errors.push(generateErrorStructure("name", "Facility name cannot be empty"));
   }
   if (errors.length > 0) {
-    return res.status(422).json({
-      content: null,
-      message: "Validation Error",
-      errors,
-    });
+    return response_unprocessable_entity(res, "Validation Error", errors);
   }
   next();
 };
@@ -59,6 +52,9 @@ export const validateDeleteFasilitas = (req, res, next) => {
   const { fasilitasId } = req.params;
   if (!fasilitasId) {
     errors.push(generateErrorStructure("fasilitasId", "Facility fasilitasId is required"));
+  }
+  if (errors.length > 0) {
+    return response_unprocessable_entity(res, "Validation Error", errors);
   }
   next();
 };

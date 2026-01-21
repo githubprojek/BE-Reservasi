@@ -1,3 +1,4 @@
+// Utility functions for standardized HTTP responses
 const response_handler = (res, status, content = null, message = "", errors = []) => {
   return res.status(status).json({ content, message, errors });
 };
@@ -18,7 +19,7 @@ export const response_not_found = (res, message = "Not Found", errors = []) => {
   return response_handler(res, 404, undefined, message, errors);
 };
 
-export const response_unprocessable_entity = (res, message = "Unprocessable Entity", errors = []) => {
+export const response_unprocessable_entity = (res, message = "Validation Error", errors = []) => {
   return response_handler(res, 422, undefined, message, errors);
 };
 
@@ -42,6 +43,8 @@ export const handleServiceErrorWithResponse = (res, serviceResponse) => {
   switch (serviceResponse?.err?.code) {
     case 400:
       return response_bad_request(res, serviceResponse.err?.message);
+    case 403:
+      return response_forbidden(res, serviceResponse.err?.message);
     case 404:
       return response_not_found(res, serviceResponse.err?.message);
     case 401:

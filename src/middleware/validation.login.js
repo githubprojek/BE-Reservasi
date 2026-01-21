@@ -1,4 +1,5 @@
 import { generateErrorStructure } from "../validation/helper.js";
+import { response_unprocessable_entity } from "../utils/response.js";
 
 export const validateRegister = (req, res, next) => {
   const errors = [];
@@ -9,19 +10,19 @@ export const validateRegister = (req, res, next) => {
   if (!fullName || fullName.trim() === "") {
     errors.push(generateErrorStructure("fullName", "Full name is required"));
   }
-  if (!notelp || notelp.trim() === "") {
-    errors.push(generateErrorStructure("notelp", "Phone number is required"));
+  if (notelp !== undefined) {
+    if (notelp.trim() === "") {
+      errors.push(generateErrorStructure("notelp", "Hotel phone number cannot be empty"));
+    } else if (!/^\d+$/.test(notelp)) {
+      errors.push(generateErrorStructure("notelp", "Phone number must be numeric"));
+    }
   }
   if (!password || password.trim() === "") {
     errors.push(generateErrorStructure("password", "Password is required"));
   }
 
   if (errors.length > 0) {
-    return res.status(422).json({
-      content: null,
-      message: "Validation Error",
-      errors,
-    });
+    return response_unprocessable_entity(res, "Validation Error", errors);
   }
   next();
 };
@@ -36,11 +37,7 @@ export const validateLogin = (req, res, next) => {
     errors.push(generateErrorStructure("password", "Password is required"));
   }
   if (errors.length > 0) {
-    return res.status(422).json({
-      content: null,
-      message: "Validation Error",
-      errors,
-    });
+    return response_unprocessable_entity(res, "Validation Error", errors);
   }
   next();
 };
@@ -66,11 +63,7 @@ export const validateUpdateUser = (req, res, next) => {
   }
 
   if (errors.length > 0) {
-    return res.status(422).json({
-      content: null,
-      message: "Validation Error",
-      errors,
-    });
+    return response_unprocessable_entity(res, "Validation Error", errors);
   }
 
   next();

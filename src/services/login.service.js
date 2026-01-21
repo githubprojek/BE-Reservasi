@@ -12,7 +12,7 @@ class LoginService {
     try {
       const { email, fullName, notelp, password, role } = userData;
       const existingUser = await Login.findOne({ email });
-      if (existingUser) return { status: false, code: 400, message: "Email already in use" };
+      if (existingUser) return BadRequestWithMessage("Email already in use");
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(password, salt);
       logger.info("Registering new user");
