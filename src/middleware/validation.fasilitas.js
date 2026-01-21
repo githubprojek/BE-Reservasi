@@ -1,6 +1,6 @@
 import { generateErrorStructure } from "../validation/helper.js";
 
-export const validateFacilityId = (req, res, next) => {
+export const validateFasilitasId = (req, res, next) => {
   const errors = [];
   const { fasilitasId } = req.params;
 
@@ -18,20 +18,12 @@ export const validateFacilityId = (req, res, next) => {
   next();
 };
 
-export const validateCreateProduct = (req, res, next) => {
+export const validateCreateFasilitas = (req, res, next) => {
   const errors = [];
-  const { name, price } = req.body;
+  const { name } = req.body;
 
   if (!name || name.trim() === "") {
-    errors.push(generateErrorStructure("name", "Product name is required"));
-  }
-
-  if (price === undefined) {
-    errors.push(generateErrorStructure("price", "Price is required"));
-  } else if (typeof price !== "number") {
-    errors.push(generateErrorStructure("price", "Price must be a number"));
-  } else if (price <= 0) {
-    errors.push(generateErrorStructure("price", "Price must be greater than 0"));
+    errors.push(generateErrorStructure("name", "Facilty name is required"));
   }
 
   if (errors.length > 0) {
@@ -42,5 +34,31 @@ export const validateCreateProduct = (req, res, next) => {
     });
   }
 
+  next();
+};
+
+export const validateUpdateFasilitas = (req, res, next) => {
+  const errors = [];
+  const { name } = req.body;
+
+  if (name !== undefined && name.trim() === "") {
+    errors.push(generateErrorStructure("name", "Facility name cannot be empty"));
+  }
+  if (errors.length > 0) {
+    return res.status(422).json({
+      content: null,
+      message: "Validation Error",
+      errors,
+    });
+  }
+  next();
+};
+
+export const validateDeleteFasilitas = (req, res, next) => {
+  const errors = [];
+  const { fasilitasId } = req.params;
+  if (!fasilitasId) {
+    errors.push(generateErrorStructure("fasilitasId", "Facility fasilitasId is required"));
+  }
   next();
 };

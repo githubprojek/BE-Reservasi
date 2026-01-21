@@ -34,6 +34,10 @@ export const response_created = (res, content = null, message = "Created") => {
   return response_handler(res, 201, content, message, undefined);
 };
 
+export const response_deleted = (res, content = null, message = "Deleted") => {
+  return response_handler(res, 204, content, message, undefined);
+};
+
 export const handleServiceErrorWithResponse = (res, serviceResponse) => {
   switch (serviceResponse?.err?.code) {
     case 400:
