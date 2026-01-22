@@ -2,20 +2,13 @@ import Room from "../models/room.models.js";
 import cloudinary from "../lib/cloudinary.js";
 import Hotel from "../models/hotel.models.js";
 import Reservasi from "../models/reservasi.models.js";
+import RoomService from "../services/room.service.js";
+import { response_success, response_created, handleServiceErrorWithResponse } from "../utils/response.js";
 
 export const createRoom = async (req, res) => {
-  const { hotel, nameRoom, jenis_room, harga_room, fasilitas_room, jumlah_room, bed_type, kapasitas, luas } = req.body;
+  const { hotel, name_room, jenis_room, harga_room, fasilitas_room, jumlah_room, bed_type, kapasitas, luas } = req.body;
 
   try {
-    if (!hotel || !nameRoom || !jenis_room || !harga_room || !jumlah_room || !bed_type || !kapasitas || !luas) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const hotelData = await Hotel.findById(hotel);
-    if (!hotelData) {
-      return res.status(404).json({ message: "Hotel not found" });
-    }
-
     const files = req.files;
     let imageUrl = [];
 
@@ -33,10 +26,10 @@ export const createRoom = async (req, res) => {
       }
     }
 
-    const newRoom = new Room({
-      hotel: hotelData._id,
+    const createRoomControllerService = await RoomService.createRoom({
+      hotel,
       image_room: imageUrl,
-      nameRoom,
+      name_room,
       jenis_room,
       harga_room,
       fasilitas_room,
@@ -45,13 +38,11 @@ export const createRoom = async (req, res) => {
       kapasitas,
       luas,
     });
+    if (!createRoomControllerService.status) {
+      return handleServiceErrorWithResponse(res, createRoomControllerService);
+    }
 
-    const savedRoom = await newRoom.save();
-
-    res.status(201).json({
-      message: "Room created successfully",
-      room: savedRoom,
-    });
+    return response_created(res, { room: createRoomControllerService.data }, "Room created successfully");
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong in createRoom" });
@@ -66,7 +57,7 @@ export const getRoom = async (req, res) => {
       rooms.map(async (room) => {
         const bookedCount = await Reservasi.countDocuments({
           room: room._id,
-          checkOut: { $gte: new Date() }, 
+          checkOut: { $gte: new Date() },
         });
 
         const availableRoom = room.jumlah_room - bookedCount;
@@ -76,7 +67,7 @@ export const getRoom = async (req, res) => {
           bookedCount,
           availableRoom: availableRoom < 0 ? 0 : availableRoom,
         };
-      })
+      }),
     );
 
     res.status(200).json({ rooms: roomsWithAvailability });
@@ -89,7 +80,7 @@ export const getRoom = async (req, res) => {
 export const getRoomById = async (req, res) => {
   const { roomId } = req.params;
   try {
-    const room = await Room.findById(roomId).populate("hotel").populate("fasilitas_room"); // ⬅️ Tambahin ini!
+    const room = await Room.findById(roomId).populate("hotel").populate("fasilitas_room");
     if (!room) {
       return res.status(404).json({ message: "Room not found" });
     }
@@ -103,23 +94,12 @@ export const getRoomById = async (req, res) => {
 
 export const updateRoom = async (req, res) => {
   const { roomId } = req.params;
-  let { nameRoom, jenis_room, harga_room, fasilitas_room, jumlah_room, remove_images, bed_type, kapasitas, luas } = req.body;
+  const { name_room, jenis_room, harga_room, fasilitas_room, jumlah_room, bed_type, kapasitas, luas, image_room, remove_images } = req.body;
+
+  const files = req.files;
+  let imageUrl = [];
 
   try {
-    const room = await Room.findById(roomId);
-    if (!room) return res.status(404).json({ message: "Room not found" });
-
-    // FIX 1: Parse fasilitas_room & remove_images
-    if (typeof fasilitas_room === "string") {
-      fasilitas_room = JSON.parse(fasilitas_room);
-    }
-    if (typeof remove_images === "string") {
-      remove_images = JSON.parse(remove_images);
-    }
-
-    const files = req.files;
-    let imageUrl = [];
-
     if (files && files.length > 0) {
       for (const file of files) {
         const uploadedResponse = await new Promise((resolve, reject) => {
@@ -134,31 +114,33 @@ export const updateRoom = async (req, res) => {
       }
     }
 
-    // FIX 2: Hapus image lama yang dihapus user
-    if (remove_images && remove_images.length > 0) {
-      room.image_room = room.image_room.filter((url) => !remove_images.includes(url));
+    const payload = {
+      name_room,
+      jenis_room,
+      harga_room,
+      fasilitas_room,
+      jumlah_room,
+      bed_type,
+      kapasitas,
+      luas,
+      new_images: imageUrl,
+    };
+
+    if (image_room) {
+      payload.image_room = typeof image_room === "string" ? JSON.parse(image_room) : image_room;
     }
 
-    if (imageUrl.length > 0) {
-      room.image_room.push(...imageUrl);
+    if (remove_images) {
+      payload.remove_images = typeof remove_images === "string" ? JSON.parse(remove_images) : remove_images;
     }
 
-    // ✅ FIX 3: Pakai nullish coalescing biar array kosong TETAP DISIMPAN
-    room.jenis_room = jenis_room ?? room.jenis_room;
-    room.nameRoom = nameRoom ?? room.nameRoom;
-    room.harga_room = harga_room ?? room.harga_room;
-    room.fasilitas_room = fasilitas_room ?? room.fasilitas_room;
-    room.jumlah_room = jumlah_room ?? room.jumlah_room;
-    room.bed_type = bed_type ?? room.bed_type;
-    room.kapasitas = kapasitas ?? room.kapasitas;
-    room.luas = luas ?? room.luas;
+    const result = await RoomService.updateRoom(roomId, payload);
 
-    const savedRoom = await room.save();
+    if (!result.status) {
+      return handleServiceErrorWithResponse(res, result);
+    }
 
-    res.status(200).json({
-      message: "Room updated successfully",
-      room: savedRoom,
-    });
+    return response_success(res, { room: result.data }, result.message);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong in updateRoom" });
@@ -167,17 +149,11 @@ export const updateRoom = async (req, res) => {
 
 export const deleteRoom = async (req, res) => {
   const { roomId } = req.params;
-  try {
-    const room = await Room.findByIdAndDelete(roomId);
-    if (!room) {
-      return res.status(404).json({ message: "Room not found" });
-    }
-
-    res.status(200).json({ message: "RoomType deleted successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Something went wrong deleteRoom" });
+  const deleteRoomControllerService = await RoomService.deleteRoom(roomId);
+  if (!deleteRoomControllerService.status) {
+    return handleServiceErrorWithResponse(res, deleteRoomControllerService);
   }
+  return response_success(res, {}, deleteRoomControllerService.message);
 };
 
 export const getAvailableRooms = async (req, res) => {
@@ -211,10 +187,9 @@ export const getAvailableRooms = async (req, res) => {
           bookedCount,
           availableRoom: availableRoom < 0 ? 0 : availableRoom,
         };
-      })
+      }),
     );
 
-    // hanya return yang available > 0
     res.status(200).json({ rooms: result.filter((r) => r.availableRoom > 0) });
   } catch (error) {
     console.error(error);

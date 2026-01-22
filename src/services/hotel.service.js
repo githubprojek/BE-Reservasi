@@ -55,35 +55,46 @@ class HotelService {
     try {
       logger.info(`Updating hotel with ID: ${hotelId}`);
 
-      const { email_hotel, notelp_hotel, new_images = [], remove_images = [] } = payload;
       const hotel = await Hotel.findById(hotelId);
       if (!hotel) {
         return INVALID_ID_SERVICE_RESPONSE;
       }
 
-      const emailInUse = await Hotel.findOne({
-        email_hotel,
-        _id: { $ne: hotelId },
-      });
-      if (emailInUse) {
-        return BadRequestWithMessage("Email already in use by another hotel");
+      // 🔹 Validasi email unik
+      if (payload.email_hotel) {
+        const emailInUse = await Hotel.findOne({
+          email_hotel: payload.email_hotel,
+          _id: { $ne: hotelId },
+        });
+        if (emailInUse) {
+          return BadRequestWithMessage("Email already in use by another hotel");
+        }
       }
 
       let imageUrls = hotel.image_hotel || [];
 
-      if (new_images.length > 0) {
-        imageUrls = [...imageUrls, ...new_images];
+      // 🔹 Jika kirim image_hotel langsung → overwrite
+      if (payload.image_hotel?.length) {
+        imageUrls = payload.image_hotel;
+      } else {
+        // 🔹 Tambah gambar baru
+        if (payload.new_images?.length) {
+          imageUrls = [...imageUrls, ...payload.new_images];
+        }
+
+        // 🔹 Hapus gambar tertentu
+        if (payload.remove_images?.length) {
+          imageUrls = imageUrls.filter((url) => !payload.remove_images.includes(url));
+        }
       }
 
-      if (remove_images.length > 0) {
-        imageUrls = imageUrls.filter((url) => !remove_images.includes(url));
-      }
+      // 🔹 Update field lain hanya jika dikirim
+      if (payload.nama_hotel !== undefined) hotel.nama_hotel = payload.nama_hotel;
+      if (payload.alamat_hotel !== undefined) hotel.alamat_hotel = payload.alamat_hotel;
+      if (payload.kota_hotel !== undefined) hotel.kota_hotel = payload.kota_hotel;
+      if (payload.email_hotel !== undefined) hotel.email_hotel = payload.email_hotel;
+      if (payload.notelp_hotel !== undefined) hotel.notelp_hotel = payload.notelp_hotel;
 
-      hotel.nama_hotel = payload.nama_hotel;
-      hotel.alamat_hotel = payload.alamat_hotel;
-      hotel.kota_hotel = payload.kota_hotel;
-      hotel.email_hotel = payload.email_hotel;
-      hotel.notelp_hotel = payload.notelp_hotel;
       hotel.image_hotel = imageUrls;
 
       const updatedHotel = await hotel.save();
