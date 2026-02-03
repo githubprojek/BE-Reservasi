@@ -26,6 +26,7 @@ class RoomService {
       return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
     }
   }
+
   static async updateRoom(roomId, payload) {
     try {
       logger.info(`Updating room with ID: ${roomId}`);
@@ -73,6 +74,7 @@ class RoomService {
       return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
     }
   }
+
   static async deleteRoom(roomId) {
     try {
       logger.info(`Deleting room with ID: ${roomId}`);
@@ -90,6 +92,7 @@ class RoomService {
       return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
     }
   }
+
   static async getRoomById(roomId) {
     try {
       logger.info(`Fetching room with ID: ${roomId}`);
@@ -107,6 +110,7 @@ class RoomService {
       return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
     }
   }
+
   static async getRoom() {
     try {
       logger.info("Fetching all rooms");
@@ -120,6 +124,7 @@ class RoomService {
       return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
     }
   }
+
   static async getAvailableRooms(hotelId, checkInDate, checkOutDate) {
     try {
       logger.info(`Checking available rooms for hotel ID: ${hotelId}`);

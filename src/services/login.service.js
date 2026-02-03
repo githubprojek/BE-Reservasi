@@ -94,7 +94,7 @@ class LoginService {
         return INVALID_ID_SERVICE_RESPONSE;
       }
       return {
-        success: true,
+        status: true,
         data: user,
       };
     } catch (error) {
