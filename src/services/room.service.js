@@ -90,6 +90,69 @@ class RoomService {
       return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
     }
   }
+  static async getRoomById(roomId) {
+    try {
+      logger.info(`Fetching room with ID: ${roomId}`);
+      const room = await Room.findById(roomId).populate("hotel").populate("fasilitas_room");
+      if (!room) {
+        logger.warn(`Room with ID: ${roomId} not found`);
+        return INVALID_ID_SERVICE_RESPONSE;
+      }
+      return {
+        status: true,
+        data: room,
+      };
+    } catch (error) {
+      logger.error("Error fetching room by ID:", error);
+      return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
+    }
+  }
+  static async getRoom() {
+    try {
+      logger.info("Fetching all rooms");
+      const rooms = await Room.find({}).populate("hotel", "nama_hotel").populate("fasilitas_room");
+      return {
+        status: true,
+        data: rooms,
+      };
+    } catch (error) {
+      logger.error("Error fetching rooms:", error);
+      return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
+    }
+  }
+  static async getAvailableRooms(hotelId, checkInDate, checkOutDate) {
+    try {
+      logger.info(`Checking available rooms for hotel ID: ${hotelId}`);
+
+      const rooms = await Room.find({ hotel: hotelId }).populate("hotel", "nama_hotel");
+
+      const results = await Promise.all(
+        rooms.map(async (room) => {
+          const bookedCount = await Reservasi.countDocuments({
+            room: room._id,
+            checkIn: { $lte: checkOutDate },
+            checkOut: { $gte: checkInDate },
+          });
+
+          const availableRoom = room.jumlah_room - bookedCount;
+
+          return {
+            ...room.toObject(),
+            bookedCount,
+            availableRoom: availableRoom < 0 ? 0 : availableRoom,
+          };
+        }),
+      );
+
+      return {
+        status: true,
+        data: results.filter((r) => r.availableRoom > 0),
+      };
+    } catch (error) {
+      logger.error("Error checking available rooms:", error);
+      return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
+    }
+  }
 }
 
 export default RoomService;

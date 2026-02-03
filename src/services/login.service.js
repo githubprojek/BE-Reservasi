@@ -86,6 +86,21 @@ class LoginService {
       return INTERNAL_SERVER_ERROR_SERVICE_RESPONSE;
     }
   }
+
+  static async getMeService(userId) {
+    try {
+      const user = await Login.findById(userId);
+      if (!user) {
+        return INVALID_ID_SERVICE_RESPONSE;
+      }
+      return {
+        success: true,
+        data: user,
+      };
+    } catch (error) {
+      return logger.error("getMe service error:", error);
+    }
+  }
 }
 
 export default LoginService;

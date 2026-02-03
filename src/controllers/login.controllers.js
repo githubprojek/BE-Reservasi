@@ -52,3 +52,11 @@ export const deleteUser = async (req, res) => {
   }
   return response_success(res, null, "User deleted successfully");
 };
+
+export const getMe = async (req, res) => {
+  const getMeControllerResponse = await Login.getMeService(req.params.userId);
+  if (!getMeControllerResponse.status) {
+    return handleServiceErrorWithResponse(res, getMeControllerResponse);
+  }
+  return response_success(res, { users: getMeControllerResponse.data }, "Get me successfully");
+};

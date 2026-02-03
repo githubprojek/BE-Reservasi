@@ -50,46 +50,21 @@ export const createRoom = async (req, res) => {
 };
 
 export const getRoom = async (req, res) => {
-  try {
-    const rooms = await Room.find({}).populate("hotel").populate("fasilitas_room");
-
-    const roomsWithAvailability = await Promise.all(
-      rooms.map(async (room) => {
-        const bookedCount = await Reservasi.countDocuments({
-          room: room._id,
-          checkOut: { $gte: new Date() },
-        });
-
-        const availableRoom = room.jumlah_room - bookedCount;
-
-        return {
-          ...room.toObject(),
-          bookedCount,
-          availableRoom: availableRoom < 0 ? 0 : availableRoom,
-        };
-      }),
-    );
-
-    res.status(200).json({ rooms: roomsWithAvailability });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Something went wrong getRoom" });
+  const getRoomControllerService = await RoomService.getRoom();
+  if (!getRoomControllerService.status) {
+    return handleServiceErrorWithResponse(res, getRoomControllerService);
   }
+  return response_success(res, { rooms: getRoomControllerService.data });
 };
 
 export const getRoomById = async (req, res) => {
   const { roomId } = req.params;
-  try {
-    const room = await Room.findById(roomId).populate("hotel").populate("fasilitas_room");
-    if (!room) {
-      return res.status(404).json({ message: "Room not found" });
-    }
-    res.status(200).json({ room });
-    console.log(`Room dengan Id (${room._id}) successfully fetched`);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Something went wrong getRoomById" });
+
+  const getRoomByIdControllerService = await RoomService.getRoomById(roomId);
+  if (!getRoomByIdControllerService.status) {
+    return handleServiceErrorWithResponse(res, getRoomByIdControllerService);
   }
+  return response_success(res, { room: getRoomByIdControllerService.data });
 };
 
 export const updateRoom = async (req, res) => {
@@ -160,39 +135,21 @@ export const getAvailableRooms = async (req, res) => {
   try {
     const { hotelId, checkIn, checkOut } = req.query;
 
-    if (!hotelId || !checkIn || !checkOut) {
-      return res.status(400).json({ message: "hotelId, checkIn, dan checkOut wajib diisi" });
-    }
-
     const checkInDate = new Date(checkIn);
     checkInDate.setHours(14, 0, 0, 0);
 
     const checkOutDate = new Date(checkOut);
     checkOutDate.setHours(12, 0, 0, 0);
 
-    const rooms = await Room.find({ hotel: hotelId });
+    const availableRoomControllerService = await RoomService.getAvailableRooms(hotelId, checkInDate, checkOutDate);
 
-    const result = await Promise.all(
-      rooms.map(async (room) => {
-        const bookedCount = await Reservasi.countDocuments({
-          room: room._id,
-          checkIn: { $lte: checkOutDate },
-          checkOut: { $gte: checkInDate },
-        });
+    if (!availableRoomControllerService.status) {
+      return handleServiceErrorWithResponse(res, availableRoomControllerService);
+    }
 
-        const availableRoom = room.jumlah_room - bookedCount;
-
-        return {
-          ...room.toObject(),
-          bookedCount,
-          availableRoom: availableRoom < 0 ? 0 : availableRoom,
-        };
-      }),
-    );
-
-    res.status(200).json({ rooms: result.filter((r) => r.availableRoom > 0) });
+    return response_success(res, { rooms: availableRoomControllerService.data });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Gagal mengambil data available room", error: error.message });
+    console.error("Unexpected error in getAvailableRooms controller:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

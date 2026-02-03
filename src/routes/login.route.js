@@ -1,5 +1,5 @@
 import express from "express";
-import { login, register, logout, getUser, updateUser, deleteUser } from "../controllers/login.controllers.js";
+import { login, register, logout, getUser, updateUser, deleteUser, getMe } from "../controllers/login.controllers.js";
 import { protectRoute, authorizeRoles } from "../middleware/auth.middleware.js";
 import { validateRegister, validateLogin, validateUpdateUser } from "../middleware/validation.login.js";
 const router = express.Router();
@@ -10,6 +10,7 @@ router.post("/logout", logout);
 router.get("/getUser", getUser);
 router.put("/updateUser/:userId", validateUpdateUser, updateUser);
 router.delete("/deleteUser/:userId", deleteUser);
+router.get("/getMe", getMe);
 // router.post("/register", protectRoute, authorizeRoles("Super Admin"), register);
 // router.post("/login", login);
 // router.get("/check-auth", protectRoute, (req, res) => {

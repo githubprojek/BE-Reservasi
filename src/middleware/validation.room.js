@@ -61,3 +61,15 @@ export const validateCreateRoom = (req, res, next) => {
   }
   next();
 };
+
+export const validateAvailableRoom = (req, res, next) => {
+  const error = [];
+  const { hotelId, checkIn, checkOut } = req.query;
+  if (!hotelId || !checkIn || !checkOut) {
+    error.push(generateErrorStructure("hotelId/checkIn/checkOut", "hotelId, checkIn, dan checkOut wajib diisi"));
+  }
+  if (error.length > 0) {
+    return response_unprocessable_entity(res, "Validation Error", error);
+  }
+  next();
+};

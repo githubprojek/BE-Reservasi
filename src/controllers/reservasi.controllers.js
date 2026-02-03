@@ -4,6 +4,8 @@ import Hotel from "../models/hotel.models.js";
 import { coreApi } from "../lib/midtrans.js";
 import { archiveReservasi } from "../lib/checkoutHelper.js";
 import HistoryReservasi from "../models/history.reservasi.models.js";
+import { response_success, response_created, handleServiceErrorWithResponse, response_internal_server_error } from "../utils/response.js";
+import ReservasiService from "../services/reservasi.service.js";
 
 export const bayarDenganCoreAPI = async (req, res) => {
   try {
@@ -141,90 +143,19 @@ export const cancelReservasi = async (req, res) => {
 
 export const createReservasi = async (req, res) => {
   try {
-    const { guestName, guestEmail, guestPhone, hotel, room, jumlahTamu, jumlahKamar, checkIn, checkOut, keterangan, paymentMethod } = req.body;
+    const createReservasiControllerService = await ReservasiService.createReservasi(req.body);
 
-    if (!guestName || !guestEmail || !guestPhone || !hotel || !room || !jumlahTamu || !checkIn || !checkOut) {
-      return res.status(400).json({ message: "Semua field wajib diisi!" });
+    if (!createReservasiControllerService.status) {
+      return handleServiceErrorWithResponse(res, createReservasiControllerService);
     }
 
-    const hotelData = await Hotel.findById(hotel);
-    if (!hotelData) {
-      return res.status(404).json({ message: "Hotel tidak ditemukan" });
-    }
-
-    const roomData = await Room.findById(room);
-    if (!roomData) {
-      return res.status(404).json({ message: "Room tidak ditemukan" });
-    }
-
-    const checkInDate = new Date(checkIn);
-    checkInDate.setHours(14, 0, 0, 0);
-
-    const checkOutDate = new Date(checkOut);
-    checkOutDate.setHours(12, 0, 0, 0);
-
-    if (checkOutDate <= checkInDate) {
-      return res.status(400).json({ message: "Tanggal check-out harus setelah check-in" });
-    }
-
-    const bookedCount = await Reservasi.countDocuments({
-      room: roomData._id,
-      $or: [
-        {
-          checkIn: { $lte: checkOutDate },
-          checkOut: { $gte: checkInDate },
-        },
-      ],
-    });
-
-    const availableRoom = roomData.jumlah_room - bookedCount;
-    if (availableRoom <= 0) {
-      return res.status(400).json({
-        message: "Tidak ada kamar tersedia di tanggal yang dipilih",
-      });
-    }
-
-    const diffTime = Math.abs(checkOutDate - checkInDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays <= 0) {
-      return res.status(400).json({
-        message: "Tanggal check-in/check-out tidak valid",
-      });
-    }
-
-    const totalPrice = diffDays * roomData.harga_room * (jumlahKamar || 1);
-
-    const newReservasi = new Reservasi({
-      guestName,
-      guestEmail,
-      guestPhone,
-      hotel: hotelData._id,
-      room: roomData._id,
-      jumlahTamu,
-      jumlahKamar: jumlahKamar || 1,
-      checkIn: checkInDate,
-      checkOut: checkOutDate,
-      totalPrice,
-      keterangan,
-      statusReservasi: "pending",
-      paymentStatus: "pending",
-      paymentMethod: paymentMethod || "bca",
-    });
-
-    const savedReservasi = await newReservasi.save();
-
-    res.status(201).json({
-      message: "Reservasi berhasil dibuat",
-      reservasi: savedReservasi,
-      bookedCount: bookedCount + 1,
-      availableRoom: availableRoom - 1,
-    });
+    return response_created(
+      res,
+      { reservasi: createReservasiControllerService.data, bookedCount: createReservasiControllerService.bookedCount, availableRoom: createReservasiControllerService.availableRoom },
+      "Reservasi created successfully",
+    );
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Terjadi kesalahan di createReservasi",
-      error: error.message,
-    });
+    return response_internal_server_error(res, "Something went wrong while creating reservasi");
   }
 };
 
