@@ -9,7 +9,7 @@ const roomSchema = new mongoose.Schema(
     image_room: {
       type: [String],
     },
-    name_room: {
+    nameRoom: {
       type: String,
     },
 

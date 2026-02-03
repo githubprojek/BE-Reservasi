@@ -51,7 +51,7 @@ class RoomService {
         }
       }
 
-      if (payload.name_room !== undefined) room.name_room = payload.name_room;
+      if (payload.nameRoom !== undefined) room.nameRoom = payload.nameRoom;
       if (payload.jenis_room !== undefined) room.jenis_room = payload.jenis_room;
       if (payload.harga_room !== undefined) room.harga_room = payload.harga_room;
       if (payload.fasilitas_room !== undefined) room.fasilitas_room = payload.fasilitas_room;

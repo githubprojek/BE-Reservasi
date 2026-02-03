@@ -1,390 +1,77 @@
 import Reservasi from "../models/reservasi.models.js";
-import Room from "../models/room.models.js";
-import Hotel from "../models/hotel.models.js";
 import { coreApi } from "../lib/midtrans.js";
-import { archiveReservasi } from "../lib/checkoutHelper.js";
-import HistoryReservasi from "../models/history.reservasi.models.js";
 import { response_success, response_created, handleServiceErrorWithResponse, response_internal_server_error } from "../utils/response.js";
 import ReservasiService from "../services/reservasi.service.js";
 
-export const bayarDenganCoreAPI = async (req, res) => {
-  try {
-    const { reservasiId } = req.params;
-    const { paymentMethod } = req.body;
-
-    const reservasi = await Reservasi.findById(reservasiId);
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    const supportedBanks = ["bca", "bri"];
-    if (!supportedBanks.includes(paymentMethod)) {
-      return res.status(400).json({
-        message: "Metode pembayaran tidak didukung",
-        received: paymentMethod,
-      });
-    }
-
-    reservasi.paymentMethod = paymentMethod;
-
-    const chargePayload = {
-      payment_type: "bank_transfer",
-      transaction_details: {
-        order_id: `RSV-${reservasi._id}`,
-        gross_amount: Number(reservasi.totalPrice),
-      },
-      customer_details: {
-        first_name: reservasi.guestName,
-        email: reservasi.guestEmail,
-        phone: reservasi.guestPhone,
-      },
-      bank_transfer: {
-        bank: paymentMethod,
-      },
-    };
-
-    const chargeRes = await coreApi.charge(chargePayload);
-
-    reservasi.paymentStatus = "pending";
-    await reservasi.save();
-
-    res.status(200).json({
-      message: "Transaksi berhasil dibuat",
-      reservasiId: reservasi._id,
-      paymentType: paymentMethod,
-      data: chargeRes,
-    });
-  } catch (err) {
-    console.error("Midtrans Error:", err?.ApiResponse || err);
-    res.status(500).json({
-      message: "Gagal membuat transaksi Core API",
-      error: err?.ApiResponse || err.message,
-    });
-  }
-};
-
-export const cekStatusPembayaran = async (req, res) => {
-  try {
-    const { reservasiId } = req.params;
-
-    const reservasi = await Reservasi.findById(reservasiId);
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    const orderId = `RSV-${reservasi._id}`;
-
-    const statusRes = await coreApi.transaction.status(orderId);
-    const status = statusRes.transaction_status; // 'settlement', 'pending', 'cancel', etc.
-
-    // Update status di DB sesuai status Midtrans
-    if (status === "settlement") {
-      reservasi.paymentStatus = "paid";
-    } else if (status === "cancel" || status === "expire") {
-      reservasi.paymentStatus = "cancelled";
-    } else {
-      reservasi.paymentStatus = status; // bisa tetap 'pending' atau lainnya
-    }
-
-    await reservasi.save();
-
-    res.status(200).json({
-      message: "Status pembayaran berhasil dicek dan diperbarui",
-      status: reservasi.paymentStatus,
-      data: statusRes,
-    });
-  } catch (err) {
-    console.error("Cek Status Error:", err);
-    res.status(500).json({
-      message: "Gagal mengecek status pembayaran",
-      error: err.message,
-    });
-  }
-};
-
-export const cancelReservasi = async (req, res) => {
-  const { reservasiId } = req.params;
-
-  try {
-    const reservasi = await Reservasi.findById(reservasiId);
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    const orderId = `RSV-${reservasi._id}`;
-
-    // Hanya boleh cancel jika status masih pending
-    if (reservasi.paymentStatus !== "pending") {
-      return res.status(400).json({
-        message: `Reservasi tidak bisa dibatalkan karena status pembayaran adalah '${reservasi.paymentStatus}'`,
-      });
-    }
-
-    // Cancel transaksi di Midtrans
-    const cancelResponse = await coreApi.transaction.cancel(orderId);
-
-    // Update status di database
-    reservasi.paymentStatus = "cancelled";
-    reservasi.statusReservasi = "cancelled";
-    await reservasi.save();
-
-    res.status(200).json({
-      message: "Reservasi berhasil dibatalkan",
-      midtrans: cancelResponse,
-    });
-  } catch (error) {
-    console.error("Batalkan Reservasi Error:", error.message);
-    res.status(500).json({
-      message: "Gagal membatalkan reservasi",
-      error: error.message,
-    });
-  }
-};
-
 export const createReservasi = async (req, res) => {
   try {
-    const createReservasiControllerService = await ReservasiService.createReservasi(req.body);
+    const createReservasiController = await ReservasiService.createReservasi(req.body);
 
-    if (!createReservasiControllerService.status) {
-      return handleServiceErrorWithResponse(res, createReservasiControllerService);
+    if (!createReservasiController.success) {
+      return handleServiceErrorWithResponse(res, createReservasiController);
     }
 
-    return response_created(
-      res,
-      { reservasi: createReservasiControllerService.data, bookedCount: createReservasiControllerService.bookedCount, availableRoom: createReservasiControllerService.availableRoom },
-      "Reservasi created successfully",
-    );
+    return response_created(res, { reservasi: createReservasiController.data, bookedCount: createReservasiController.bookedCount, availableRoom: createReservasiController.availableRoom }, "Reservasi created successfully");
   } catch (error) {
     return response_internal_server_error(res, "Something went wrong while creating reservasi");
   }
 };
 
-export const createMidtransTransaction = async (req, res) => {
-  try {
-    const { reservasiId } = req.params;
-
-    const reservasi = await Reservasi.findById(reservasiId);
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    if (reservasi.totalPrice <= 0) {
-      return res.status(400).json({ message: "Total harga tidak valid" });
-    }
-
-    const parameter = {
-      transaction_details: {
-        order_id: `RSV-${reservasi._id}`,
-        gross_amount: reservasi.totalPrice,
-      },
-      customer_details: {
-        first_name: reservasi.guestName,
-        email: reservasi.guestEmail,
-        phone: reservasi.guestPhone,
-      },
-    };
-
-    const midtransRes = await coreApi.createTransaction(parameter);
-
-    res.status(200).json({
-      snapToken: midtransRes.token,
-      redirectUrl: midtransRes.redirect_url,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Gagal membuat transaksi Midtrans", error: error.message });
-  }
-};
-
 export const getReservasi = async (req, res) => {
-  try {
-    const reservasi = await Reservasi.find({}).populate("hotel").populate("room");
-    res.status(200).json({ reservasi });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Terjadi kesalahan di getReservasi",
-      error: error.message,
-    });
+  const getReservasiController = await ReservasiService.getReservasiService();
+  if (!getReservasiController.success) {
+    return handleServiceErrorWithResponse(res, getReservasiController);
   }
+  return response_success(res, { reservasi: getReservasiController.data });
 };
 
 export const getReservasiById = async (req, res) => {
   const { reservasiId } = req.params;
-  try {
-    const reservasi = await Reservasi.findById(reservasiId).populate("hotel").populate("room");
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-    res.status(200).json({ reservasi });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Terjadi kesalahan di getReservasiById",
-      error: error.message,
-    });
+
+  const getReservasiIdController = await ReservasiService.getReservasiIdService(reservasiId);
+  if (!getReservasiIdController.success) {
+    return handleServiceErrorWithResponse(res, getReservasiIdController);
   }
+  return response_success(res, { reservasi: getReservasiIdController.data });
 };
 
 export const updateReservasi = async (req, res) => {
-  const { reservasiId } = req.params;
-  const { checkIn, checkOut, statusReservasi, paymentStatus, jumlahKamar, jumlahTamu } = req.body;
-
-  try {
-    const reservasi = await Reservasi.findById(reservasiId).populate("room");
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    if (jumlahKamar !== undefined) reservasi.jumlahKamar = Number(jumlahKamar);
-    if (jumlahTamu !== undefined) reservasi.jumlahTamu = Number(jumlahTamu);
-
-    if (checkIn) {
-      const checkInDate = new Date(checkIn);
-      checkInDate.setHours(14, 0, 0, 0);
-      reservasi.checkIn = checkInDate;
-    }
-
-    if (checkOut) {
-      const checkOutDate = new Date(checkOut);
-      checkOutDate.setHours(12, 0, 0, 0);
-      reservasi.checkOut = checkOutDate;
-    }
-
-    if (reservasi.checkOut <= reservasi.checkIn) {
-      return res.status(400).json({
-        message: "Tanggal check-out harus setelah check-in",
-      });
-    }
-
-    if (checkIn || checkOut || jumlahKamar) {
-      const diffTime = Math.abs(reservasi.checkOut - reservasi.checkIn);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      reservasi.totalPrice = diffDays * reservasi.room.harga_room * (reservasi.jumlahKamar || 1);
-    }
-
-    if (statusReservasi) reservasi.statusReservasi = statusReservasi;
-    if (paymentStatus) reservasi.paymentStatus = paymentStatus;
-
-    if (paymentStatus === "paid" && !reservasi.paidAt) {
-      reservasi.paidAt = new Date();
-    }
-
-    const updatedReservasi = await reservasi.save();
-
-    res.status(200).json({
-      message: "Reservasi berhasil diupdate",
-      reservasi: updatedReservasi,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Terjadi kesalahan di updateReservasi",
-      error: error.message,
-    });
+  const updateReservasiController = await ReservasiService.updateReservasiService(req.params.reservasiId, req.body);
+  if (!updateReservasiController.success) {
+    return handleServiceErrorWithResponse(res, updateReservasiController);
   }
+  return response_success(res, { reservasi: updateReservasiController.data }, "Update Reservasi Successfully");
 };
 
 export const deleteReservasi = async (req, res) => {
   const { reservasiId } = req.params;
-  try {
-    const reservasi = await Reservasi.findByIdAndDelete(reservasiId);
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    res.status(200).json({ message: "Reservasi berhasil dihapus" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Terjadi kesalahan di deleteReservasi",
-      error: error.message,
-    });
+  const deleteReservasiController = await ReservasiService.deleteReservasiService(reservasiId);
+  if (!deleteReservasiController.success) {
+    return handleServiceErrorWithResponse(res, deleteReservasiController);
   }
+  return response_success(res, null, "Deleted reservasi Successfully");
 };
 
-export const manualCheckout = async (req, res) => {
-  const { reservasiId } = req.params;
-  try {
-    const archivedId = await archiveReservasi(reservasiId);
-    res.status(200).json({
-      message: `Reservasi ${archivedId} successfully moved to history`,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Something went wrong", error: error.message });
-  }
-};
-
-export const getHistoryReservasi = async (req, res) => {
-  try {
-    const history = await HistoryReservasi.find({}).populate("hotel").populate("room");
-    res.status(200).json({ history });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Failed to get history reservasi" });
-  }
-};
-// ✅ CONTROLLER: Check-In Reservasi
 export const checkInReservasi = async (req, res) => {
   const { reservasiId } = req.params;
+  const checkInReservasiController = await ReservasiService.checkInReservasiService(reservasiId);
 
-  try {
-    const reservasi = await Reservasi.findById(reservasiId);
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    if (reservasi.statusReservasi !== "confirmed") {
-      return res.status(400).json({ message: "Reservasi tidak valid untuk check-in" });
-    }
-
-    reservasi.statusReservasi = "checked-in";
-    reservasi.checkedInAt = new Date(); // opsional, kalau mau simpan timestamp check-in
-
-    await reservasi.save();
-
-    res.status(200).json({
-      message: "Reservasi berhasil di-check-in",
-      reservasi,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Terjadi kesalahan di checkInReservasi",
-      error: error.message,
-    });
-  }
+  return response_success(res, { reservasi: checkInReservasiController }, "Reservasi berhasil di-check-in");
 };
 
 export const checkOutReservasi = async (req, res) => {
   const { reservasiId } = req.params;
-
-  try {
-    const reservasi = await Reservasi.findById(reservasiId);
-    if (!reservasi) {
-      return res.status(404).json({ message: "Reservasi tidak ditemukan" });
-    }
-
-    if (reservasi.statusReservasi !== "checked-in") {
-      return res.status(400).json({ message: "Reservasi belum check-in, tidak bisa check-out" });
-    }
-
-    // Update status jadi checked-out
-    reservasi.statusReservasi = "checked-out";
-    await reservasi.save();
-
-    // Langsung arsip ke history
-    await archiveReservasi(reservasiId);
-
-    res.status(200).json({
-      message: "Reservasi berhasil di-check-out dan diarsipkan",
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Terjadi kesalahan di checkOutReservasi",
-      error: error.message,
-    });
+  const checkOutReservasiController = await ReservasiService.checkOutReservasiService(reservasiId);
+  if (!checkOutReservasiController.success) {
+    return handleServiceErrorWithResponse(res, checkOutReservasiController);
   }
+  return response_success(res, { reservasi: checkOutReservasiController }, "Reservasi berhasil di-check-out dan diarsipkan");
+};
+
+export const archiveReservasi = async (req, res) => {
+  const archivedReservasi = await ReservasiService.getArchiveReservasi();
+  if (!archivedReservasi.success) {
+    return handleServiceErrorWithResponse(res, archivedReservasi);
+  }
+  return response_success(res, { reservasi: archivedReservasi.data });
 };
