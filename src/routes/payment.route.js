@@ -1,6 +1,5 @@
 import express from "express";
 import { createMidtransTransaction, bayarDenganCoreAPI, cekStatusPembayaran, cancelReservasi } from "../controllers/payment.controllers.js";
-import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
