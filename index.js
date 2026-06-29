@@ -7,8 +7,8 @@ import reservasiRoutes from "./src/routes/reservasi.route.js";
 import roomRoutes from "./src/routes/room.route.js";
 import fasilitasRoutes from "./src/routes/fasilitas.route.js";
 import hotelRoutes from "./src/routes/hotel.route.js";
+import paymentRoutes from "./src/routes/payment.route.js";
 
-import cookieParser from "cookie-parser";
 import { startAutoCheckout } from "./src/lib/autoCheckout.js";
 import helmet from "helmet";
 import ExpressMongoSanitize from "express-mongo-sanitize";
@@ -33,7 +33,6 @@ app.use(
   }),
 );
 
-app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(helmet());
 app.use(ExpressMongoSanitize());
@@ -43,6 +42,7 @@ app.use("/hotel", hotelRoutes);
 app.use("/room", roomRoutes);
 app.use("/reservasi", reservasiRoutes);
 app.use("/fasilitas", fasilitasRoutes);
+app.use("/payment", paymentRoutes);
 
 startAutoCheckout();
 
