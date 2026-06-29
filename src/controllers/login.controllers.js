@@ -1,7 +1,6 @@
 import Login from "../models/login.models.js";
 import { response_success, response_created, handleServiceErrorWithResponse } from "../utils/response.js";
 import LoginService from "../services/login.service.js";
-import { setAuthCookie } from "../lib/auth-token.js";
 
 import dotenv from "dotenv";
 
@@ -20,12 +19,13 @@ export const login = async (req, res) => {
   if (!loginControllerResponse.status) {
     return handleServiceErrorWithResponse(res, loginControllerResponse);
   }
-  setAuthCookie(res, loginControllerResponse.data.token);
-  return response_success(res, { user: loginControllerResponse.data.user }, "Login successful");
+  return response_success(res, {
+    user: loginControllerResponse.data.user,
+    token: loginControllerResponse.data.token,
+  }, "Login successful");
 };
 
 export const logout = (req, res) => {
-  res.clearCookie("jwt");
   return response_success(res, null, "Logout successful");
 };
 
@@ -54,9 +54,9 @@ export const deleteUser = async (req, res) => {
 };
 
 export const getMe = async (req, res) => {
-  const getMeControllerResponse = await Login.getMeService(req.params.userId);
+  const getMeControllerResponse = await LoginService.getMeService(req.params.userId);
   if (!getMeControllerResponse.status) {
     return handleServiceErrorWithResponse(res, getMeControllerResponse);
   }
-  return response_success(res, { users: getMeControllerResponse.data }, "Get me successfully");
+  return response_success(res, { user: getMeControllerResponse.data }, "Get me successfully");
 };

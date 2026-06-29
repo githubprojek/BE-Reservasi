@@ -5,12 +5,3 @@ export const generateToken = (userId) => {
     expiresIn: "7d",
   });
 };
-
-export const setAuthCookie = (res, token) => {
-  res.cookie("jwt", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-};

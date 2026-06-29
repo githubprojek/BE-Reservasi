@@ -3,9 +3,6 @@ import { INTERNAL_SERVER_ERROR_SERVICE_RESPONSE, INVALID_ID_SERVICE_RESPONSE, Ba
 import Login from "../models/login.models.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/auth-token.js";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 class LoginService {
   static async registerService(userData) {
@@ -36,6 +33,7 @@ class LoginService {
       if (!isPasswordMatch) return BadRequestWithMessage("Email or password is incorrect");
 
       const token = generateToken(login._id);
+
       return {
         status: true,
         data: { user: login, token },
