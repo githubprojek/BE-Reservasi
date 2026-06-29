@@ -18,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT;
 app.disable("etag");
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) || [];
 
 app.use(
   cors({
@@ -34,7 +34,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "50mb" }));
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(ExpressMongoSanitize());
 
 app.use("/auth", loginRoutes);
@@ -43,6 +43,14 @@ app.use("/room", roomRoutes);
 app.use("/reservasi", reservasiRoutes);
 app.use("/fasilitas", fasilitasRoutes);
 app.use("/payment", paymentRoutes);
+
+app.use((err, req, res, next) => {
+  console.error("🔥 Unhandled Error:", err.message);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 startAutoCheckout();
 
